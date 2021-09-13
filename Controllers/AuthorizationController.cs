@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using bAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using System.Security.Cryptography;
 
 namespace bAPI.Controllers
 {
@@ -13,12 +15,25 @@ namespace bAPI.Controllers
     public class AuthorizationController : ControllerBase
     {
         private readonly DatabaseContext _databaseContext;
-        //private Dictionary<string, int> sessionList;
+
+        private static string HashPassword(string p)
+        {
+            byte[] byteSalt = Convert.FromBase64String("412G3AS/jBnm6bbgZp4LWw==");
+
+            string hashedpw = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: p,
+                salt: byteSalt,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 100000,
+                numBytesRequested: 64
+                ));
+
+            return hashedpw;
+        }
 
         public AuthorizationController(DatabaseContext databaseContext)
         {
             _databaseContext = databaseContext;
-            //sessionList = new();
         }
 
         [HttpGet]
@@ -40,12 +55,15 @@ namespace bAPI.Controllers
         {
             SessionModel newSession = new();
 
+            u.Password = HashPassword(u.Password);
+
             var user = await _databaseContext.Users.FirstOrDefaultAsync(x => x.Login == u.Login && x.Password == u.Password);
 
             if (user == null)
             {
                 return NotFound();
             }
+
             var g = Guid.NewGuid().ToString();
             while (await _databaseContext.UserSessions.FirstOrDefaultAsync(x => x.Token == g) != null)
             {
@@ -54,12 +72,6 @@ namespace bAPI.Controllers
 
             newSession.Token = g;
             newSession.UserId = user.Id;
-
-
-
-            //sessionList.Add( token.Token, user.Id);
-            //Console.WriteLine(sessionList.Count);
-
 
             _databaseContext.UserSessions.Add(newSession);
 
@@ -84,10 +96,13 @@ namespace bAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] UserDataModel u)
         {
+
             if (u.Login.Length == 0 && u.Password.Length == 0 && u.Name.Length == 0 && u.Lastname.Length == 0)
             {
                 return NotFound();
             }
+
+            u.Password = HashPassword(u.Password);
 
             var newUser = new UserDataModel
             {
