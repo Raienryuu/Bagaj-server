@@ -2,38 +2,46 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using bAPI;
 
 namespace bAPI.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20210914113017_LocationModelUpdated")]
+    partial class LocationModelUpdated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "5.0.9");
 
-            modelBuilder.Entity("bAPI.Models.BidModel", b =>
+            modelBuilder.Entity("bAPI.Models.LocationModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<float>("BidValue")
-                        .HasColumnType("REAL");
+                    b.Property<string>("City")
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("BidderId")
+                    b.Property<string>("PostCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StreetAddress")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("PackageId")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Voivodeship")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("BidModel");
+                    b.ToTable("LocationModel");
                 });
 
             modelBuilder.Entity("bAPI.Models.PackageModel", b =>
@@ -42,48 +50,26 @@ namespace bAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("EndCity")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EndPostCode")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EndStreetAddress")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EndVoivodeship")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("LowestBidId")
+                    b.Property<int?>("EndLocationId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("OfferState")
-                        .HasColumnType("INTEGER");
+                    b.Property<float>("Price")
+                        .HasColumnType("REAL");
 
                     b.Property<int>("SenderId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("StartCity")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StartPostCode")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StartStreetAddress")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StartVoivodeship")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("StartLocationId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("TransporterId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<float>("Weight")
-                        .HasColumnType("REAL");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("LowestBidId");
+                    b.HasIndex("EndLocationId");
+
+                    b.HasIndex("StartLocationId");
 
                     b.ToTable("PackageModel");
                 });
@@ -103,6 +89,14 @@ namespace bAPI.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UserSessions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Token = "Example token",
+                            UserId = 42312313
+                        });
                 });
 
             modelBuilder.Entity("bAPI.Models.UserDataModel", b =>
@@ -121,9 +115,6 @@ namespace bAPI.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Password")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PhoneNumber")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -151,11 +142,17 @@ namespace bAPI.Migrations
 
             modelBuilder.Entity("bAPI.Models.PackageModel", b =>
                 {
-                    b.HasOne("bAPI.Models.BidModel", "LowestBid")
+                    b.HasOne("bAPI.Models.LocationModel", "EndLocation")
                         .WithMany()
-                        .HasForeignKey("LowestBidId");
+                        .HasForeignKey("EndLocationId");
 
-                    b.Navigation("LowestBid");
+                    b.HasOne("bAPI.Models.LocationModel", "StartLocation")
+                        .WithMany()
+                        .HasForeignKey("StartLocationId");
+
+                    b.Navigation("EndLocation");
+
+                    b.Navigation("StartLocation");
                 });
 #pragma warning restore 612, 618
         }

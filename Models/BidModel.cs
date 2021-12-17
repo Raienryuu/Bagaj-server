@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 
 namespace bAPI.Models
 {
-    public class SessionModel
+    public class BidModel
     {
         public int Id { get; set; }
-        public int UserId { get; set; }
-        public string Token { get; set; }
+        public int PackageId { get; set; }
+        public int BidderId { get; set; }
+        public float BidValue { get; set; }
     }
 }

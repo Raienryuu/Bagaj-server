@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using bAPI;
 
 namespace bAPI.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20210915120332_Update2PackageModel")]
+    partial class Update2PackageModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,23 +38,40 @@ namespace bAPI.Migrations
                     b.ToTable("BidModel");
                 });
 
+            modelBuilder.Entity("bAPI.Models.LocationModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("City")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PostCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StreetAddress")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Voivodeship")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LocationModel");
+                });
+
             modelBuilder.Entity("bAPI.Models.PackageModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("EndCity")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EndPostCode")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EndStreetAddress")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EndVoivodeship")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("EndLocationId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int?>("LowestBidId")
                         .HasColumnType("INTEGER");
@@ -63,17 +82,8 @@ namespace bAPI.Migrations
                     b.Property<int>("SenderId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("StartCity")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StartPostCode")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StartStreetAddress")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("StartVoivodeship")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("StartLocationId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("TransporterId")
                         .HasColumnType("INTEGER");
@@ -83,7 +93,11 @@ namespace bAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EndLocationId");
+
                     b.HasIndex("LowestBidId");
+
+                    b.HasIndex("StartLocationId");
 
                     b.ToTable("PackageModel");
                 });
@@ -151,11 +165,23 @@ namespace bAPI.Migrations
 
             modelBuilder.Entity("bAPI.Models.PackageModel", b =>
                 {
+                    b.HasOne("bAPI.Models.LocationModel", "EndLocation")
+                        .WithMany()
+                        .HasForeignKey("EndLocationId");
+
                     b.HasOne("bAPI.Models.BidModel", "LowestBid")
                         .WithMany()
                         .HasForeignKey("LowestBidId");
 
+                    b.HasOne("bAPI.Models.LocationModel", "StartLocation")
+                        .WithMany()
+                        .HasForeignKey("StartLocationId");
+
+                    b.Navigation("EndLocation");
+
                     b.Navigation("LowestBid");
+
+                    b.Navigation("StartLocation");
                 });
 #pragma warning restore 612, 618
         }

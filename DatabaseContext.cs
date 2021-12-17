@@ -19,14 +19,6 @@ namespace bAPI
             base.OnModelCreating(modelBuilder);
 
             var users = new List<UserDataModel>();
-            var sessions = new List<SessionModel>();
-
-            var newSession = new SessionModel();
-            newSession.UserId = 42312313;
-            newSession.Token = "Example token";
-            newSession.Id = 1;
-
-            sessions.Add(newSession);
 
             var user = new UserDataModel
             {
@@ -47,9 +39,10 @@ namespace bAPI
             };
             users.Add(user);
 
-            modelBuilder.Entity<SessionModel>().HasData(sessions);
             modelBuilder.Entity<UserDataModel>().HasData(users);
             
         }
+
+        public DbSet<bAPI.Models.PackageModel> PackageModel { get; set; }
     }
 }

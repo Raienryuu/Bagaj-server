@@ -31,6 +31,17 @@ namespace bAPI.Controllers
             return hashedpw;
         }
 
+        public async Task<IActionResult> VerifyUser(string token)
+        {
+            var session = await _databaseContext.UserSessions.FirstOrDefaultAsync(x => x.Token == token);
+            if (session == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(session);
+        }
+
         public AuthorizationController(DatabaseContext databaseContext)
         {
             _databaseContext = databaseContext;
@@ -55,7 +66,7 @@ namespace bAPI.Controllers
         {
             SessionModel newSession = new();
 
-            u.Password = HashPassword(u.Password);
+            //u.Password = HashPassword(u.Password);
 
             var user = await _databaseContext.Users.FirstOrDefaultAsync(x => x.Login == u.Login && x.Password == u.Password);
 
@@ -133,6 +144,8 @@ namespace bAPI.Controllers
 
             return Ok();
         }
+
+        
 
     }
 }
