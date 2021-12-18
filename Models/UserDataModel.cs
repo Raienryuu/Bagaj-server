@@ -1,17 +1,27 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace bAPI.Models
 {
+    [Index(nameof(Name), nameof(Lastname))]
+    [Index(nameof(Login), IsUnique = true)]
     public class UserDataModel
     {
         public int Id { get; set; }
+        [Required]
         public string Login { get; set; }
+        [Required]
         public string Password { get; set; }
+        [Required]
         public string Name { get; set; }
+        [Required]
         public string Lastname { get; set; }
-        public string PhoneNumber { get; set; }
+        [Required]
+        public string ContactInfo { get; set; }
+        public float Rating { get; set; }
     }
 }

@@ -31,17 +31,6 @@ namespace bAPI.Controllers
             return hashedpw;
         }
 
-        public async Task<IActionResult> VerifyUser(string token)
-        {
-            var session = await _databaseContext.UserSessions.FirstOrDefaultAsync(x => x.Token == token);
-            if (session == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(session);
-        }
-
         public AuthorizationController(DatabaseContext databaseContext)
         {
             _databaseContext = databaseContext;
@@ -49,8 +38,14 @@ namespace bAPI.Controllers
 
         [HttpGet]
         [Route("list")]
-        public async Task<IEnumerable<UserDataModel>> GetUsers()
+        public async Task<IEnumerable<UserDataModel>> GetUsers(string token)
         {
+            var user = await _databaseContext.UserSessions.FirstOrDefaultAsync(x => x.Token == token);
+
+            if (user == null)
+            {
+                return new List<UserDataModel>();
+            }
             return await _databaseContext.Users.ToListAsync();
         }
 
@@ -61,12 +56,32 @@ namespace bAPI.Controllers
             return await _databaseContext.UserSessions.ToListAsync();
         }
 
+        [HttpDelete]
+        [Route("sessions/wipe")]
+        public async Task<IActionResult> WipeSessions()
+        {
+            if (_databaseContext.UserSessions.Any())
+            {
+                var session = await _databaseContext.UserSessions.Where(x => x.Id > 0).ToListAsync();
+                if (session == null)
+                    return NotFound();
+
+                foreach (var ses in session) {
+                    _databaseContext.Remove(ses);
+                }
+                
+            }
+            await _databaseContext.SaveChangesAsync();
+
+            return Ok();
+        }
+
         [HttpGet]
         public async Task<IActionResult> Login(UserDataModel u)
         {
             SessionModel newSession = new();
 
-            //u.Password = HashPassword(u.Password);
+            u.Password = HashPassword(u.Password);
 
             var user = await _databaseContext.Users.FirstOrDefaultAsync(x => x.Login == u.Login && x.Password == u.Password);
 
@@ -82,7 +97,7 @@ namespace bAPI.Controllers
             }
 
             newSession.Token = g;
-            newSession.UserId = user.Id;
+            newSession.FK_UserId = user.Id;
 
             _databaseContext.UserSessions.Add(newSession);
 
@@ -144,8 +159,6 @@ namespace bAPI.Controllers
 
             return Ok();
         }
-
-        
 
     }
 }

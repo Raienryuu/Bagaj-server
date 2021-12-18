@@ -30,7 +30,7 @@ namespace bAPI
             {
                 return NotFound();
             }
-            return Ok(await _databaseContext.Users.FirstOrDefaultAsync(x => x.Id == session.UserId));
+            return Ok(await _databaseContext.Users.FirstOrDefaultAsync(x => x.Id == session.FK_UserId));
         }
 
     }

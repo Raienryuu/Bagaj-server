@@ -41,8 +41,9 @@ namespace bAPI
             });
 
             services.AddDbContext<DatabaseContext>(
-            opt => opt.UseSqlite(@"Data Source=database.db"));
-            //opt => opt.UseNpgsql(@"Host=localhost;Database=db;Username=postgres;Password=root"));
+                //opt => opt.UseSqlite(@"Data Source=database.db"));
+                opt => opt.UseNpgsql(@"Host=localhost;Database=db;Username=postgres;Password=root"));
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

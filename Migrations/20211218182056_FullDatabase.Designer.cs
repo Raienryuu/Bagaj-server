@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using bAPI;
@@ -9,9 +10,10 @@ using bAPI;
 namespace bAPI.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20211218182056_FullDatabase")]
+    partial class FullDatabase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -145,6 +147,7 @@ namespace bAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Token")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -290,13 +293,13 @@ namespace bAPI.Migrations
 
             modelBuilder.Entity("bAPI.Models.SessionModel", b =>
                 {
-                    b.HasOne("bAPI.Models.UserDataModel", "UserDataModel")
+                    b.HasOne("bAPI.Models.UserDataModel", "UserId")
                         .WithMany()
                         .HasForeignKey("FK_UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("UserDataModel");
+                    b.Navigation("UserId");
                 });
 #pragma warning restore 612, 618
         }
