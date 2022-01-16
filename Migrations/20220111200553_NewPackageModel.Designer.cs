@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using bAPI;
@@ -9,9 +10,10 @@ using bAPI;
 namespace bAPI.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20220111200553_NewPackageModel")]
+    partial class NewPackageModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,9 +53,6 @@ namespace bAPI.Migrations
                         .HasColumnType("integer")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-                    b.Property<float>("ApproximateDistance")
-                        .HasColumnType("real");
-
                     b.Property<string>("Comment")
                         .HasColumnType("text");
 
@@ -74,9 +73,6 @@ namespace bAPI.Migrations
 
                     b.Property<string>("EndVoivodeship")
                         .HasColumnType("text");
-
-                    b.Property<float>("LowestBid")
-                        .HasColumnType("real");
 
                     b.Property<int>("LowestBidId")
                         .HasColumnType("integer");
@@ -125,10 +121,7 @@ namespace bAPI.Migrations
                     b.Property<int>("PackageId")
                         .HasColumnType("integer");
 
-                    b.Property<float>("RatedBySender")
-                        .HasColumnType("real");
-
-                    b.Property<float>("RatedByTransporter")
+                    b.Property<float>("Rating")
                         .HasColumnType("real");
 
                     b.Property<int>("SenderId")

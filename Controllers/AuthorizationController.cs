@@ -48,6 +48,12 @@ namespace bAPI.Controllers
             }
             return await _databaseContext.Users.ToListAsync();
         }
+        [HttpGet]
+        [Route("listAll")]
+        public async Task<IEnumerable<UserDataModel>> GetUsers()
+        {
+            return await _databaseContext.Users.ToListAsync();
+        }
 
         [HttpGet]
         [Route("sessions")]
@@ -64,7 +70,9 @@ namespace bAPI.Controllers
             {
                 var session = await _databaseContext.UserSessions.Where(x => x.Id > 0).ToListAsync();
                 if (session == null)
+                    {
                     return NotFound();
+                }
 
                 foreach (var ses in session) {
                     _databaseContext.Remove(ses);
@@ -97,7 +105,7 @@ namespace bAPI.Controllers
             }
 
             newSession.Token = g;
-            newSession.FK_UserId = user.Id;
+            newSession.UserId = user.Id;
 
             _databaseContext.UserSessions.Add(newSession);
 
@@ -108,22 +116,16 @@ namespace bAPI.Controllers
             return Ok(tok);
         }
 
-        [HttpGet]
-        [Route("{id}")]
-        public async Task<IActionResult> GetById(long id)
-        {
-            var user = await _databaseContext.Users.FirstOrDefaultAsync(x => x.Id == id);
-            if (user == null)
-                return NotFound();
-
-            return Ok(user);
-        }
-
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] UserDataModel u)
         {
+            
 
-            if (u.Login.Length == 0 && u.Password.Length == 0 && u.Name.Length == 0 && u.Lastname.Length == 0)
+            if (u is null || u.Login is null || u.Password is null || u.Name is null || u.Lastname is null || u.ContactInfo is null) {
+                return NotFound();
+            }
+
+            if (u.Login.Length < 6 || u.Password.Length < 3 || u.Name.Length < 1 || u.Lastname.Length < 1 || u.ContactInfo.Length < 1)
             {
                 return NotFound();
             }
@@ -135,7 +137,9 @@ namespace bAPI.Controllers
                 Login = u.Login,
                 Password = u.Password,
                 Name = u.Name,
-                Lastname = u.Lastname
+                Lastname = u.Lastname,
+                ContactInfo = u.ContactInfo,
+                Rating = -1
             };
 
 
@@ -152,7 +156,9 @@ namespace bAPI.Controllers
         {
             var session = await _databaseContext.UserSessions.FirstOrDefaultAsync(x => x.Token == token);
             if (session == null)
-                return NotFound();
+            {
+                    return Ok();
+            }
 
             _databaseContext.Remove(session);
             await _databaseContext.SaveChangesAsync();
@@ -160,5 +166,120 @@ namespace bAPI.Controllers
             return Ok();
         }
 
+        [HttpDelete]
+        [Route("checkUsername/{login}")]
+        public async Task<IActionResult> CheckIfLoginIsAvailable(string login)
+        {
+            var session = await _databaseContext.Users.FirstOrDefaultAsync(x => x.Login == login);
+            if (session == null)
+            {
+                return NotFound();
+            }
+
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("getUsername/{id}")]
+        public async Task<IActionResult> GetUserFromId(int id)
+        {
+            var user = await _databaseContext.Users.FirstOrDefaultAsync(x => x.Id == id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            var u = new UserDataModel
+            {
+                Rating = user.Rating,
+                Login = user.Login
+            };
+
+            return Ok(u);
+        }
+
+        [HttpGet]
+        [Route("getMyUser/{token}")]
+        public async Task<IActionResult> GetMyUser(string token)
+        {
+            var session = await _databaseContext.UserSessions.FirstOrDefaultAsync(x => x.Token == token);
+            if (session == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _databaseContext.Users.FirstOrDefaultAsync(x => x.Id == session.UserId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            user.Password = "";
+
+            return Ok(user);
+        }
+
+        [HttpGet]
+        [Route("getSenderUser/{packageId}/{token}")]
+        public async Task<IActionResult> GetSenderUser(int packageId, string token)
+        {
+            var session = await _databaseContext.UserSessions.FirstOrDefaultAsync(x => x.Token == token);
+            if (session == null)
+            {
+                return NotFound();
+            }
+
+            var package = await _databaseContext.Packages.FirstOrDefaultAsync(x => x.Id == packageId);
+
+            if (package == null)
+            {
+                return NotFound();
+            }
+
+            var senderUser = await _databaseContext.Users.FirstOrDefaultAsync(x => x.Id == package.SenderId);
+
+            if (senderUser is null)
+            {
+                return NotFound();
+            }
+
+            senderUser.Password = "";
+
+            return Ok(senderUser);
+        }
+
+        [HttpGet]
+        [Route("getTransporterUser/{packageId}/{token}")]
+        public async Task<IActionResult> GetTransporterUser(int packageId, string token)
+        {
+
+            var session = await _databaseContext.UserSessions.FirstOrDefaultAsync(x => x.Token == token);
+            if (session == null)
+            {
+                return NotFound("");
+            }
+
+            var package = await _databaseContext.Packages.FirstOrDefaultAsync(x => x.Id == packageId && (x.SenderId == session.UserId
+            || x.TransporterId == session.UserId ));
+
+            if (package == null)
+            {
+                return NotFound("");
+            }
+
+            var lowestBid = await _databaseContext.Bids.FirstOrDefaultAsync(b => b.PackageId == package.Id);
+
+            var transporterUser = await _databaseContext.Users.FirstOrDefaultAsync(x => x.Id == package.TransporterId || x.Id == lowestBid.BidderId);
+
+            if (transporterUser is null)
+            {
+                return NotFound("");
+            }
+
+            transporterUser.Password = "";
+
+            return Ok(transporterUser);
+        }
+
     }
+
 }
+

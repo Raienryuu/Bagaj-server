@@ -10,15 +10,16 @@ namespace bAPI.Models
     public class RatingModel
     {
         public int Id { get; set; }
-        [Required]
-        [ForeignKey("FK_SenderId")]
-        public UserDataModel SenderId { get; set; }
-        [Required]
-        [ForeignKey("FK_PackageId")]
-        public PackageModel PackageId { get; set; }
-        [Required]
-        [ForeignKey("FK_TransporterId")]
-        public UserDataModel TransporterId { get; set; }
-        public float Rating { get; set; }
+        public int SenderId { get; set; }
+        [ForeignKey("SenderId")]
+        public UserDataModel Sender { get; set; }
+        public int PackageId { get; set; }
+        [ForeignKey("PackageId")]
+        public PackageModel Package { get; set; }
+        public int TransporterId { get; set; }
+        [ForeignKey("TransporterId")]
+        public UserDataModel Transporter { get; set; }
+        public float RatedBySender { get; set; }
+        public float RatedByTransporter { get; set; }
     }
 }

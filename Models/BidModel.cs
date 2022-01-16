@@ -6,12 +6,14 @@ namespace bAPI.Models
     public class BidModel
     {
         public int Id { get; set; }
+        public int PackageId { get; set; }
         [Required]
-        [ForeignKey("FK_PackageId")]
-        public PackageModel PackageId { get; set; }
+        [ForeignKey("PackageId")]
+        public PackageModel Package { get; set; }
+        public int BidderId { get; set; }
         [Required]
-        [ForeignKey("FK_UserId")]
-        public UserDataModel BidderId { get; set; }
+        [ForeignKey("BidderId")]
+        public UserDataModel Bidder { get; set; }
         public float BidValue { get; set; }
     }
 }

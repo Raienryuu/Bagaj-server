@@ -10,8 +10,8 @@ using bAPI;
 namespace bAPI.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20211218185756_ViirutalForeignKeyTest")]
-    partial class ViirutalForeignKeyTest
+    [Migration("20211218215311_ForeignKeys")]
+    partial class ForeignKeys
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -31,17 +31,17 @@ namespace bAPI.Migrations
                     b.Property<float>("BidValue")
                         .HasColumnType("real");
 
-                    b.Property<int>("FK_PackageId")
+                    b.Property<int>("BidderId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("FK_UserId")
+                    b.Property<int>("PackageId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FK_PackageId");
+                    b.HasIndex("BidderId");
 
-                    b.HasIndex("FK_UserId");
+                    b.HasIndex("PackageId");
 
                     b.ToTable("Bids");
                 });
@@ -68,16 +68,13 @@ namespace bAPI.Migrations
                     b.Property<string>("EndVoivodeship")
                         .HasColumnType("text");
 
-                    b.Property<int?>("FK_Lowest_BidId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("FK_UserId1")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("FK_UserId2")
+                    b.Property<int>("LowestBidId")
                         .HasColumnType("integer");
 
                     b.Property<int>("OfferState")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SenderId")
                         .HasColumnType("integer");
 
                     b.Property<string>("StartCity")
@@ -92,16 +89,15 @@ namespace bAPI.Migrations
                     b.Property<string>("StartVoivodeship")
                         .HasColumnType("text");
 
+                    b.Property<int>("TransporterId")
+                        .HasColumnType("integer");
+
                     b.Property<float>("Weight")
                         .HasColumnType("real");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FK_Lowest_BidId");
-
-                    b.HasIndex("FK_UserId1");
-
-                    b.HasIndex("FK_UserId2");
+                    b.HasIndex("SenderId");
 
                     b.ToTable("Packages");
                 });
@@ -113,25 +109,25 @@ namespace bAPI.Migrations
                         .HasColumnType("integer")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-                    b.Property<int>("FK_PackageId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("FK_SenderId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("FK_TransporterId")
+                    b.Property<int>("PackageId")
                         .HasColumnType("integer");
 
                     b.Property<float>("Rating")
                         .HasColumnType("real");
 
+                    b.Property<int>("SenderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TransporterId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("FK_PackageId");
+                    b.HasIndex("PackageId");
 
-                    b.HasIndex("FK_SenderId");
+                    b.HasIndex("SenderId");
 
-                    b.HasIndex("FK_TransporterId");
+                    b.HasIndex("TransporterId");
 
                     b.ToTable("Ratings");
                 });
@@ -143,18 +139,18 @@ namespace bAPI.Migrations
                         .HasColumnType("integer")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-                    b.Property<int>("FK_UserId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Token")
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
 
-                    b.HasIndex("FK_UserId");
+                    b.HasKey("Id");
 
                     b.HasIndex("Token")
                         .IsUnique();
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("UserSessions");
                 });
@@ -206,7 +202,7 @@ namespace bAPI.Migrations
                             Lastname = "Berry",
                             Login = "user1",
                             Name = "Tom",
-                            Password = "haslo1",
+                            Password = "OYQ+xy+ILeo9tXmeT+/vNhDxnlNAl5KWXp25yeIE70/dWqjfSyRo/Xrtkoi8HEOm9WrTDXYhdxONT5CLOmJLcg==",
                             Rating = 0f
                         },
                         new
@@ -216,89 +212,77 @@ namespace bAPI.Migrations
                             Lastname = "Jerry",
                             Login = "user2",
                             Name = "Paul",
-                            Password = "haslo2",
+                            Password = "R7WDCLmMmLg71VR+F1S4CNCc2OCOhuxxs5RHcxOO5gtInrMrVTwyI68SGNk1eZleRQckSe7oKsSgyNi26XQ0VA==",
                             Rating = 0f
                         });
                 });
 
             modelBuilder.Entity("bAPI.Models.BidModel", b =>
                 {
-                    b.HasOne("bAPI.Models.PackageModel", "PackageId")
+                    b.HasOne("bAPI.Models.UserDataModel", "Bidder")
                         .WithMany()
-                        .HasForeignKey("FK_PackageId")
+                        .HasForeignKey("BidderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("bAPI.Models.UserDataModel", "BidderId")
+                    b.HasOne("bAPI.Models.PackageModel", "Package")
                         .WithMany()
-                        .HasForeignKey("FK_UserId")
+                        .HasForeignKey("PackageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("BidderId");
+                    b.Navigation("Bidder");
 
-                    b.Navigation("PackageId");
+                    b.Navigation("Package");
                 });
 
             modelBuilder.Entity("bAPI.Models.PackageModel", b =>
                 {
-                    b.HasOne("bAPI.Models.BidModel", "LowestBid")
+                    b.HasOne("bAPI.Models.UserDataModel", "Sender")
                         .WithMany()
-                        .HasForeignKey("FK_Lowest_BidId");
-
-                    b.HasOne("bAPI.Models.UserDataModel", "SenderId")
-                        .WithMany()
-                        .HasForeignKey("FK_UserId1")
+                        .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("bAPI.Models.UserDataModel", "TransporterId")
-                        .WithMany()
-                        .HasForeignKey("FK_UserId2");
-
-                    b.Navigation("LowestBid");
-
-                    b.Navigation("SenderId");
-
-                    b.Navigation("TransporterId");
+                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("bAPI.Models.RatingModel", b =>
                 {
-                    b.HasOne("bAPI.Models.PackageModel", "PackageId")
+                    b.HasOne("bAPI.Models.PackageModel", "Package")
                         .WithMany()
-                        .HasForeignKey("FK_PackageId")
+                        .HasForeignKey("PackageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("bAPI.Models.UserDataModel", "SenderId")
+                    b.HasOne("bAPI.Models.UserDataModel", "Sender")
                         .WithMany()
-                        .HasForeignKey("FK_SenderId")
+                        .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("bAPI.Models.UserDataModel", "TransporterId")
+                    b.HasOne("bAPI.Models.UserDataModel", "Transporter")
                         .WithMany()
-                        .HasForeignKey("FK_TransporterId")
+                        .HasForeignKey("TransporterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PackageId");
+                    b.Navigation("Package");
 
-                    b.Navigation("SenderId");
+                    b.Navigation("Sender");
 
-                    b.Navigation("TransporterId");
+                    b.Navigation("Transporter");
                 });
 
             modelBuilder.Entity("bAPI.Models.SessionModel", b =>
                 {
-                    b.HasOne("bAPI.Models.UserDataModel", "UserDataModel")
+                    b.HasOne("bAPI.Models.UserDataModel", "User")
                         .WithMany()
-                        .HasForeignKey("FK_UserId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("UserDataModel");
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

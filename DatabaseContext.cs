@@ -40,7 +40,7 @@ namespace bAPI
             {
                 Id = 1,
                 Login = "user1",
-                Password = "haslo1",
+                Password = "OYQ+xy+ILeo9tXmeT+/vNhDxnlNAl5KWXp25yeIE70/dWqjfSyRo/Xrtkoi8HEOm9WrTDXYhdxONT5CLOmJLcg==",
                 Name = "Tom",
                 Lastname = "Berry",
                 ContactInfo = "berries11@gmail.com"
@@ -50,7 +50,7 @@ namespace bAPI
             {
                 Id = 2,
                 Login = "user2",
-                Password = "haslo2",
+                Password = "R7WDCLmMmLg71VR+F1S4CNCc2OCOhuxxs5RHcxOO5gtInrMrVTwyI68SGNk1eZleRQckSe7oKsSgyNi26XQ0VA==",
                 Name = "Paul",
                 Lastname = "Jerry",
                 ContactInfo = "mousepaul@yahoo.com"

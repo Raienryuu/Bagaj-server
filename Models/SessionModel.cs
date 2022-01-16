@@ -12,9 +12,9 @@ namespace bAPI.Models
     public class SessionModel
     {
         public int Id { get; set; }
-        public int FK_UserId { get; set; }
-        [ForeignKey("FK_UserId")]
-        public virtual UserDataModel UserDataModel { get; set;}
+        public int UserId { get; set; }
+        [ForeignKey("UserId")]
+        public UserDataModel User { get; set;}
         public string Token { get; set; }
     }
 }

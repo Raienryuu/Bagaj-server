@@ -42,7 +42,7 @@ namespace bAPI
 
             services.AddDbContext<DatabaseContext>(
                 //opt => opt.UseSqlite(@"Data Source=database.db"));
-                opt => opt.UseNpgsql(@"Host=localhost;Database=db;Username=postgres;Password=root"));
+                opt => opt.UseNpgsql(@"Host=localhost;Database=db;Username=postgres;Password=root;Include Error Detail=true"));
 
         }
 

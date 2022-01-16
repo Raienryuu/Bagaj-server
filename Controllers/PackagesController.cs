@@ -1,4 +1,4 @@
-﻿/*using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,23 +14,21 @@ namespace bAPI.Controllers
     [ApiController]
     public class PackagesController : ControllerBase
     {
-        private readonly DatabaseContext _context;
+        private readonly DatabaseContext _databaseContext;
 
-        public async Task<ActionResult<SessionModel>> VerifyUser(string token)
+        public async Task<ActionResult<int>> VerifyUser(string token)
         {
-            var session = await _context.UserSessions.FirstOrDefaultAsync(x => x.Token == token);
-
-            if (session == null)
+            var session = await _databaseContext.UserSessions.FirstOrDefaultAsync(x => x.Token == token);
+            if (session is null)
             {
-                return new SessionModel();
+                return -1;
             }
-
-            return session;
+            return session.UserId;
         }
 
         public PackagesController(DatabaseContext context)
         {
-            _context = context;
+            _databaseContext = context;
         }
 
         // GET: api/Packages
@@ -38,112 +36,183 @@ namespace bAPI.Controllers
         [Route("releated/{token}")]
         public async Task<ActionResult<IEnumerable<PackageModel>>> GetPackageModel(string token)
         {
-            SessionModel session = VerifyUser(token).Result.Value;
+            int userId = VerifyUser(token).Result.Value;
 
-            //if (session.Id == 0)
-            //{
-            //    Console.WriteLine("session not found");
-            //    return NotFound();
-            //}
-
-            var list = await _context.PackageModel.ToListAsync();
-
-            foreach (var item in list)
-            {
-                item.LowestBid = new BidModel();
-
-                item.LowestBid.BidderId = 5;
-                item.LowestBid.BidValue = 150;
-                item.LowestBid.PackageId = item.Id;
-
-                Console.WriteLine(item.LowestBid);
-            }
-
-            return list;
-            //return await _context.PackageModel.Where(x => x.SenderId == session.UserId).ToListAsync();
-        }
-
-        // GET: api/Packages/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<PackageModel>> GetPackageModel(int id)
-        {
-            var packageModel = await _context.PackageModel.FindAsync(id);
-
-            if (packageModel == null)
+            if (userId < 0)
             {
                 return NotFound();
             }
 
-            return packageModel;
+            var packages = await _databaseContext.Packages.Where(x => x.SenderId == userId || x.TransporterId == userId).ToListAsync();
+
+            var userBids = await _databaseContext.Bids.Where(x => x.BidderId == userId).Select(x => x.PackageId).Distinct().ToListAsync();
+
+            var pack = new PackageModel();
+
+            foreach (var bid in userBids)
+            {
+                pack = await _databaseContext.Packages.FirstOrDefaultAsync(x => x.Id == bid && x.OfferState < 1);
+                if (pack is not null)
+                {
+                    packages.Add(pack);
+                }
+            }
+
+            return packages;
         }
 
-        // PUT: api/Packages/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutPackageModel(int id, PackageModel packageModel)
+        [HttpGet]
+        [Route("market/{token}")]
+        public async Task<ActionResult<IEnumerable<PackageModel>>> GetMarketPackages(string token)
         {
-            if (id != packageModel.Id)
+            int userId = VerifyUser(token).Result.Value;
+
+            if (userId < 0)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(packageModel).State = EntityState.Modified;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PackageModelExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return await _databaseContext.Packages.Where(x => x.OfferState == 0  && x.SenderId != userId).ToListAsync();
         }
+
+        [HttpGet]
+        [Route("all")]
+        public async Task<ActionResult<IEnumerable<PackageModel>>> GetPackageModel()
+        {
+            return await _databaseContext.Packages.ToListAsync();
+        }
+
 
         // POST: api/Packages
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<PackageModel>> PostPackageModel(PackageModel packageModel)
+        [HttpPost("{token}")]
+        public async Task<ActionResult<PackageModel>> PostPackageModel(string token, [FromBody] PackageModel packageModel)
         {
-            
 
-            _context.PackageModel.Add(packageModel);
+            int userId = VerifyUser(token).Result.Value;
 
-            
+            if (userId < 0)
+            {
+                return NotFound();
+            }
 
-            await _context.SaveChangesAsync();
+            packageModel.SenderId = userId;
+            packageModel.TransporterId = -1;
+            packageModel.LowestBidId = -1;
+            packageModel.OfferState = 0;
+            packageModel.CreationDate = DateTime.UtcNow;
+            packageModel.LowestBid = -1;
+
+            _databaseContext.Packages.Add(packageModel);
+
+            await _databaseContext.SaveChangesAsync();
 
             return CreatedAtAction("GetPackageModel", new { id = packageModel.Id }, packageModel);
+        }
+
+        [HttpPut("cancel/{token}")]
+        public async Task<ActionResult<PackageModel>> CancelPackage(string token, [FromBody] PackageModel packageModel)
+        {
+
+            int userId = VerifyUser(token).Result.Value;
+
+            if (userId < 0)
+            {
+                return NotFound();
+            }
+
+            var package = await _databaseContext.Packages.FirstOrDefaultAsync(
+                x => x.Id == packageModel.Id);
+
+            if (package.SenderId != userId)
+            {
+                return NotFound();
+            }
+
+            package.OfferState = 4; // 4 state - cancelled
+
+            await _databaseContext.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpPut("accept/{token}")]
+        public async Task<ActionResult<PackageModel>> AcceptTransporterPackage(string token, [FromBody] PackageModel packageModel)
+        {
+
+            int userId = VerifyUser(token).Result.Value;
+
+            if (userId < 0)
+            {
+                return NotFound();
+            }
+
+            var package = await _databaseContext.Packages.FirstOrDefaultAsync(
+                x => x.Id == packageModel.Id);
+
+            if (package.SenderId != userId || package.LowestBidId <= 0)
+            {
+                return NotFound();
+            }
+
+            var bid = await _databaseContext.Bids.FirstOrDefaultAsync(b => b.Id == package.LowestBidId);
+
+            package.OfferState = 1; // 1 state - in progress
+            package.TransporterId = bid.BidderId;
+
+            await _databaseContext.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpPut("finalize/{token}")]
+        public async Task<ActionResult<PackageModel>> FinalizePackage(string token, [FromBody] PackageModel packageModel)
+        {
+
+            int userId = VerifyUser(token).Result.Value;
+
+            if (userId < 0)
+            {
+                return NotFound();
+            }
+
+            var package = await _databaseContext.Packages.FirstOrDefaultAsync(
+                x => x.Id == packageModel.Id);
+
+            if (package.SenderId != userId || package.TransporterId <= 0)
+            {
+                return NotFound();
+            }
+
+            package.OfferState = 3; // 3 state - finished
+
+            await _databaseContext.SaveChangesAsync();
+
+            return Ok();
         }
 
         // DELETE: api/Packages/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePackageModel(int id)
         {
-            var packageModel = await _context.PackageModel.FindAsync(id);
+            var packageModel = await _databaseContext.Packages.FindAsync(id);
             if (packageModel == null)
             {
                 return NotFound();
             }
 
-            _context.PackageModel.Remove(packageModel);
-            await _context.SaveChangesAsync();
+            _databaseContext.Packages.Remove(packageModel);
+            await _databaseContext.SaveChangesAsync();
 
             return NoContent();
         }
 
+        
+
         private bool PackageModelExists(int id)
         {
-            return _context.PackageModel.Any(e => e.Id == id);
+            return _databaseContext.Packages.Any(e => e.Id == id);
         }
     }
 }
-*/
