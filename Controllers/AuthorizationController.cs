@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 using bAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
-using System.Security.Cryptography;
 
 namespace bAPI.Controllers
 {
-    
+
     [Route("api/authorization/")]
     public class AuthorizationController : ControllerBase
     {

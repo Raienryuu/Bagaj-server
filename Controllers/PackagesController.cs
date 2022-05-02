@@ -60,11 +60,120 @@ namespace bAPI.Controllers
 
             return packages;
         }
+        // GET: api/Packages with pages
+        [HttpGet]
+        [Route("releatedP/{token}")]
+        public async Task<ActionResult<IEnumerable<PackageModel>>> GetPackageModel(string token, int page, int size)
+        {
+  
+            int userId = VerifyUser(token).Result.Value;
+
+            if (userId < 0)
+            {
+                return NotFound();
+            }
+
+            var packages = await _databaseContext.Packages.Where(x => x.SenderId == userId || x.TransporterId == userId).ToListAsync();
+
+            var userBids = await _databaseContext.Bids.Where(x => x.BidderId == userId).Select(x => x.PackageId).Distinct().ToListAsync();
+
+            var pack = new PackageModel();
+
+            foreach (var bid in userBids)
+            {
+                pack = await _databaseContext.Packages.FirstOrDefaultAsync(x => x.Id == bid && x.OfferState < 1);
+                if (pack is not null)
+                {
+                    packages.Add(pack);
+                }
+            }
+
+            return packages.OrderByDescending(x => x.Id).Skip((page - 1) * size).Take(size).ToList();
+        }
+        
+        // GET: api/Packages
+        [HttpGet]
+        [Route("releatedCount/{token}")]
+        public async Task<ActionResult<int>> GetReleatedPackagesCount(string token)
+        {
+  
+            int userId = VerifyUser(token).Result.Value;
+
+            if (userId < 0)
+            {
+                return NotFound();
+            }
+
+            var packages = await _databaseContext.Packages.Where(x => x.SenderId == userId || x.TransporterId == userId).ToListAsync();
+
+            var userBids = await _databaseContext.Bids.Where(x => x.BidderId == userId).Select(x => x.PackageId).Distinct().ToListAsync();
+
+            var pack = new PackageModel();
+
+            foreach (var bid in userBids)
+            {
+                pack = await _databaseContext.Packages.FirstOrDefaultAsync(x => x.Id == bid && x.OfferState < 1);
+                if (pack is not null)
+                {
+                    packages.Add(pack);
+                }
+            }
+
+            return packages.Count;
+        }
 
         [HttpGet]
-        [Route("market/{token}")]
-        public async Task<ActionResult<IEnumerable<PackageModel>>> GetMarketPackages(string token)
+        [Route("marketCount/{token}")]
+        public async Task<ActionResult<int>> GetMarketPackagesCount(
+            string token, string voiS, string voiE, 
+            float? dist, float? weightLimitTo, float? weightLimitFrom)
         {
+
+            int userId = VerifyUser(token).Result.Value;
+
+            if (userId < 0)
+            {
+                return NotFound();
+            }
+
+            var filter = _databaseContext.Packages.Where(x => x.OfferState == 0 && x.SenderId != userId)
+                .OrderByDescending(x => x.Id);
+
+            if (voiS is not null)
+            {
+                filter = (IOrderedQueryable<PackageModel>)filter.Where(x => x.StartVoivodeship == voiS);
+            }
+
+            if (voiE is not null)
+            {
+                filter = (IOrderedQueryable<PackageModel>)filter.Where(x => x.EndVoivodeship == voiE);
+            }
+
+            if (dist is not null && dist >= 1)
+            {
+                filter = (IOrderedQueryable<PackageModel>)filter.Where(x => x.ApproximateDistance <= dist);
+            }
+
+            if (weightLimitTo is not null && weightLimitTo >= 1)
+            {
+                filter = (IOrderedQueryable<PackageModel>)filter.Where(x => x.Weight <= weightLimitTo);
+            }
+
+            if (weightLimitFrom is not null && weightLimitFrom != -1)
+            {
+                filter = (IOrderedQueryable<PackageModel>)filter.Where(x => x.Weight >= weightLimitFrom);
+            }
+
+            return await filter.CountAsync();
+        }
+
+        [HttpGet]
+        [Route("marketP/{token}")]
+        public async Task<ActionResult<IEnumerable<PackageModel>>> GetMarketPackagesPage(
+            string token, int page, int size,
+            string voiS, string voiE, float? dist, float? weightLimitTo, float? weightLimitFrom)
+        {
+
             int userId = VerifyUser(token).Result.Value;
 
             if (userId < 0)
@@ -73,7 +182,37 @@ namespace bAPI.Controllers
             }
 
 
-            return await _databaseContext.Packages.Where(x => x.OfferState == 0  && x.SenderId != userId).ToListAsync();
+            var filter = _databaseContext.Packages.Where(x => x.OfferState == 0 && x.SenderId != userId)
+                .OrderByDescending(x => x.Id);
+
+            if (voiS is not null)
+            {
+                filter = (IOrderedQueryable<PackageModel>)filter.Where(x => x.StartVoivodeship == voiS);
+            }
+
+            if (voiE is not null)
+            {
+                filter = (IOrderedQueryable<PackageModel>)filter.Where(x => x.EndVoivodeship == voiE);
+            }
+
+            if (dist is not null && dist >= 1 )
+            {
+                filter = (IOrderedQueryable<PackageModel>)filter.Where(x => x.ApproximateDistance <= dist);
+            }
+
+            if (weightLimitTo is not null && weightLimitTo >= 1)
+            {
+                filter = (IOrderedQueryable<PackageModel>)filter.Where(x => x.Weight <= weightLimitTo);
+            }
+
+            if (weightLimitFrom is not null && weightLimitFrom != -1)
+            {
+                filter = (IOrderedQueryable<PackageModel>)filter.Where(x => x.Weight >= weightLimitFrom);
+            }
+
+            return await filter.Skip((page - 1) * size)
+                .Take(size)
+                .ToListAsync();
         }
 
         [HttpGet]
