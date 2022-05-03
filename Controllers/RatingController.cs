@@ -1,8 +1,6 @@
 ﻿using bAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -22,15 +20,11 @@ namespace bAPI.Controllers
         [HttpPost("rateAndCloseOffer/{token}")]
         public async Task<IActionResult> RateAndCloseOffer(string token, [FromBody] RatingModel u)
         {
-            Console.WriteLine("start");
 
             if (u is null || u.PackageId < 1 || u.RatedBySender < 1 || u.RatedBySender > 10)
             {
                 return NotFound("invalid data");
             }
-
-            Console.WriteLine(u.PackageId);
-            Console.WriteLine(u.RatedBySender);
 
             var senderSession = await _databaseContext.UserSessions.FirstOrDefaultAsync(x => x.Token == token);
 
