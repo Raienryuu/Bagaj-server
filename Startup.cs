@@ -35,14 +35,10 @@ namespace bAPI
 
             services.AddControllers();
 
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "bAPI", Version = "v1" });
-            });
 
             services.AddDbContext<DatabaseContext>(
-                //opt => opt.UseSqlite(@"Data Source=database.db"));
-                opt => opt.UseNpgsql(@"Host=localhost;Database=db;Username=postgres;Password=root;Include Error Detail=true"));
+                opt => opt.UseSqlite(@"Data Source=database.db"));
+                //opt => opt.UseNpgsql(@"Host=localhost;Database=db;Username=postgres;Password=root;Include Error Detail=true"));
 
         }
 
@@ -52,8 +48,6 @@ namespace bAPI
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "bAPI v1"));
             }
 
             app.UseHttpsRedirection();

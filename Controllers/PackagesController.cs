@@ -322,7 +322,7 @@ namespace bAPI.Controllers
                 return NotFound();
             }
 
-            package.OfferState = 3; // 3 state - finished
+            package.OfferState = 2; // 2 state - finished
 
             await _databaseContext.SaveChangesAsync();
 

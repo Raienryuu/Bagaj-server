@@ -165,7 +165,7 @@ namespace bAPI.Controllers
             return Ok();
         }
 
-        [HttpDelete]
+        [HttpGet]
         [Route("checkUsername/{login}")]
         public async Task<IActionResult> CheckIfLoginIsAvailable(string login)
         {
