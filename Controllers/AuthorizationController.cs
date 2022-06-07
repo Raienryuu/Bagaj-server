@@ -129,6 +129,13 @@ namespace bAPI.Controllers
                 return NotFound();
             }
 
+            var r = CheckIfLoginIsAvailable(u.Login);
+
+            if(r.Result.ToString() == "Microsoft.AspNetCore.Mvc.OkResult")
+            {
+                return NotFound();
+            }
+
             u.Password = HashPassword(u.Password);
 
             var newUser = new UserDataModel
@@ -140,7 +147,6 @@ namespace bAPI.Controllers
                 ContactInfo = u.ContactInfo,
                 Rating = -1
             };
-
 
             _databaseContext.Users.Add(newUser);
 
@@ -174,7 +180,6 @@ namespace bAPI.Controllers
             {
                 return NotFound();
             }
-
             return Ok();
         }
 
